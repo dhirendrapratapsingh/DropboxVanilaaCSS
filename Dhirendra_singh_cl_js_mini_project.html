@@ -1,0 +1,299 @@
+<html>
+<head>
+<title>CodeLathe Inc Mini Project</title>
+<style>
+  .boxed
+  {
+    position: relative;
+    overflow: hidden;
+    width: 100px;
+    height: 200px;
+    margin: 5px auto;
+    border-radius: 0 0px 30px 30px;
+    background-color: #e5e9eb;
+    cursor: pointer;
+    border: 2px dashed #ccc;
+    padding: 20px;
+  }
+
+  .dropbutton {
+    display: inline-block;
+    padding: 10px;
+    margin: 10% auto 15px auto; 
+    cursor: pointer;
+    color: dodgerblue;
+    border-radius: 5px;
+    border: 1px solid dodgerblue;
+  }
+  .dropbutton:hover {
+    background: dodgerblue;
+    color: white;
+  }
+  #fileElem {
+    display: none;
+  }
+
+  .boxed.highlight {
+    border-color: dodgerblue;
+  }
+  #gallery {
+    margin-top: 30px;
+    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #gallery img {
+    width: 150px;
+    height: 150px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+/* provide little transition animation effect while adding files */
+
+  .progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    transition: height 1s ease-in-out, background 1s ease-in-out;
+    border-radius: 5px;
+    background-color: #2ecc40;
+  }
+
+  .progress[data-direction='reverse'] {
+    top: 0;
+    bottom: auto;
+  }
+
+  .progress[fillpercent='20'] {
+    height: 20%;
+  }
+  .progress[fillpercent='40'] {
+    height: 40%;
+  }
+  .progress[fillpercent='60'] {
+    height: 60%;
+  }
+  .progress[fillpercent='80'] {
+    height: 80%;
+  }
+  .progress[fillpercent='100'] {
+    height: 100%;
+  }
+
+  .progress[fillpercent='maxreached'] {
+    height: 100%;
+  }
+    
+  #mesaage
+  {
+    font-size: 20px;
+    color: gray;
+    font-family: none;
+    position: relative;
+    top: 15px;
+  }
+  .filecard
+  {
+    width: 140px;
+    padding: 65px 10px;
+    margin: 10px;
+    vertical-align: middle;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 10px;
+    box-shadow: 5px 5px 7px rgba(0,0,0,.05);
+    word-wrap: break-word;
+  }
+   
+</style>
+</head>
+<body>
+<!-- 
+
+// DESCRIPTION: DRAG-N-DROP enabler
+// This html page has a single div element dndbox. 
+// Your objective is to write apply CSS style to this box "dndbox" and add javascript code to enable drag-n-drop functionality for this element.
+//1) CSS: Style the dndbox such that it appears as a square box at the center of the page.
+//2) Javascript: You should create an inline javascript code that will add drag-n-drop feature such that:
+- upon dragging and dropping file(s) on the box, a message should be displayed saying "Got X file(s)", where X is the number of files dropped.
+- upon dropping any other items, a message should be displayed saying "Not a file".
+
+-->
+
+<div style="text-align:center">
+  
+  <label class="dropbutton" for="fileElem">Drop here.</label>
+
+  <div id="dndbox" class="boxed">
+    <input type="file" id="fileElem" multiple>
+    <div class="progress" fillpercent="0">
+    </div>
+  </div>
+
+  <label id="message" ></label>
+
+</div>
+
+<div id="gallery"></div>
+
+<script>
+
+var fillPercent = 0, filecounter = 0, invalid = false;
+
+window.onload = function()
+{
+
+  var dropArea = document.getElementById('dndbox');
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropArea.addEventListener(eventName, preventDefaults, false)
+  })
+
+  function preventDefaults(e) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  document.getElementsByTagName('body')[0].addEventListener('drop', preventDefaults, false);
+
+
+  ;['dragenter', 'dragover'].forEach(eventName => {
+    dropArea.addEventListener(eventName, highlight, false)
+  })
+
+  ;['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, unhighlight, false)
+  })
+
+  function highlight(e) {
+    //console.log(e);
+    
+    dropArea.classList.add('highlight')
+  }
+
+  function unhighlight(e) {
+       //console.log(e);
+    dropArea.classList.remove('highlight')
+  }
+
+
+  dropArea.addEventListener('drop', handleDrop, false)
+
+  function handleDrop(e) {
+    let dt = e.dataTransfer
+    let files = dt.files
+
+    handleFiles(files)
+  }
+
+
+  function handleFiles(files)
+  {
+    files = [...files]
+    
+    files.forEach(function (file)
+    {
+      //console.log(fillPercent);
+      console.log(file);
+      
+      
+      let reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = function ()
+      {
+        if (file.type == '' || file.type == undefined)
+        {
+           window.alert('Not a file');
+           invalid = true;
+           return;
+        }
+        else
+        {
+          //updating counters
+          fillPercent = fillPercent + 20;
+          filecounter = filecounter + 1;
+           console.log(fillPercent);
+
+          if (fillPercent < 100)
+          {
+            setTimeout(function () {
+              document.getElementsByClassName('progress')[0].setAttribute('fillpercent', fillPercent);
+            }, fillPercent * 50);
+          }
+          else
+          {
+            setTimeout(function () {
+              document.getElementsByClassName('progress')[0].setAttribute('fillpercent', 'maxreached');
+            }, fillPercent * 50);
+          }
+
+          document.getElementById('message').innerText = 'Number of file uploaded is ' + filecounter; // to show incremental effect
+
+        }
+
+        if (file.type.match('image.*'))
+        {
+          let img = document.createElement('img')
+          img.src = reader.result
+          document.getElementById('gallery').appendChild(img)
+        }
+        else
+        {
+          let card = document.createElement('label')
+          card.className = 'filecard'
+          card.innerText = file.type +' file';
+          document.getElementById('gallery').appendChild(card)
+        }
+
+        
+      } // onload end
+
+      if (files.length == filecounter)
+      {
+        if (!invalid && filecounter > 1) {
+          window.alert('Got ' + filecounter + ' file(s)')
+        }
+      }
+
+      if (invalid)
+      {
+        return; // from parent function 
+      }
+
+    });
+
+    
+  }
+
+  var input = document.getElementsByTagName('input')[0];
+
+  input.onclick = function () {
+    this.value = null;
+  };
+
+  input.onchange = function (e) {
+    console.log(e.target.files);
+    
+    handleFiles(e.target.files)
+  };
+
+
+
+
+}
+
+/* drag, dragend, dragexit, and dragstart are all fired on the element that is being dragged, 
+and in our case, we’ll be dragging files in from our file system rather than DOM elements, 
+so these events will never pop up. 
+
+ event.preventDefault() in each of the listeners for these events. If you don’t, the browser will 
+ end up opening the file you dropped instead of sending it along to the drop event handler.*/
+
+</script>
+</body>
+</html>
